@@ -29,6 +29,11 @@ install_concourse() {
   sed -i '' 's/8\.8\.8\.8/192.168.65.7/g' docker-compose.yml
   sed -i '' 's/tutorial/bill-tanzu/g' docker-compose.yml
   sed -i '' 's/overlay/naive/g' docker-compose.yml
+  echo '      CONCOURSE_WORKER_RUNTIME: "containerd"'
+  echo '      CONCOURSE_WORKER_CONTAINERD_DNS_PROXY_ENABLE: "true"'
+  echo '      CONCOURSE_WORKER_CONTAINERD_DNS_SERVER: "192.168.65.7"'
+  echo '      CONCOURSE_WORKER_CONTAINERD_ALLOW_HOST_ACCESS: "true"'
+  echo '      CONCOURSE_WORKER_CONTAINERD_ADDITIONAL_HOSTS: "172.19.0.1 nexus"'
   echo '    restart: unless-stopped' >>docker-compose.yml
 
   cat >>docker-compose.yml <<EOF

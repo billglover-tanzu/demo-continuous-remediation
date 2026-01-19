@@ -245,13 +245,6 @@ jobs:
                 configure_maven
                 configure_git
                 
-                set +u  # Temporarily disable unbound variable check for SDKMAN
-                export SDKMAN_OFFLINE_MODE=${SDKMAN_OFFLINE_MODE:-false}
-                source "$HOME/.sdkman/bin/sdkman-init.sh"
-                set -u  # Re-enable unbound variable check
-                
-                sdk use java 21.0.9-librca
-                
                 advisor build-config get
                 
                 upgrade_output=$(advisor upgrade-plan get)
