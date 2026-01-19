@@ -139,6 +139,8 @@ jobs:
                 
                 # Helper functions
                 install_advisor() {
+                  echo "Dumping mvn config..."
+                  cat ~/.m2/settings.xml
                   echo "Installing Spring Application Advisor v${ADVISOR_VERSION}..."
 
                   mvn dependency:get \
