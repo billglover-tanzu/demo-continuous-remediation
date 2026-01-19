@@ -143,6 +143,9 @@ jobs:
                   cat ~/.m2/settings.xml
                   echo "Installing Spring Application Advisor v${ADVISOR_VERSION}..."
 
+                  echo "Fetching a URL..."
+                  curl -X GET "http://nexus:8081/repository/maven-public/org/apache/maven/plugins/maven-clean-plugin/2.5/maven-clean-plugin-2.5.pom"
+
                   mvn dependency:get \
                     -Dartifact=com.vmware.tanzu.spring:application-advisor-cli-linux:${ADVISOR_VERSION}:tar \
                     -Dtransitive=false -U
