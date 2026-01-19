@@ -146,7 +146,7 @@ jobs:
             values: ((.:github_repos))
         do:
           - set_pipeline: ((.:repo.repo_name))
-            file: templates/pipelines/github-pipeline.yml
+            file: templates/pipelines/worker-pipeline.yml
             team: ((.:repo.org_name))
             vars:
               advisor_version: ((advisor_version))
