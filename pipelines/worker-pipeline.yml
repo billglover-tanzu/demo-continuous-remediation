@@ -141,7 +141,7 @@ jobs:
                 install_advisor() {
                   echo "Installing Spring Application Advisor v${ADVISOR_VERSION}..."
 
-                  mvnd dependency:get \
+                  mvn dependency:get \
                     -Dartifact=com.vmware.tanzu.spring:application-advisor-cli-linux:${ADVISOR_VERSION}:tar \
                     -Dtransitive=false
 
