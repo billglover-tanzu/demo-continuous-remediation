@@ -1,0 +1,161 @@
+resource_types:
+  - name: time
+    type: registry-image
+    source:
+      repository: concourse/time-resource
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+
+resources:
+  - name: alpine
+    type: registry-image
+    source:
+      repository: alpine
+      username: ((docker-hub-username))
+      password: ((docker-hub-password))
+  - name: periodic
+    type: time
+    source:
+      interval: 15m
+  - name: templates
+    type: git
+    source:
+      uri: https://github.com/billglover-tanzu/demo-continuous-remediation
+      branch: main
+
+jobs:
+  - name: discover-and-spawn
+    serial: true
+    plan:
+      - get: templates
+      - get: periodic
+        trigger: true
+      - get: alpine
+      - task: crawl-github
+        image: alpine
+        timeout: 15m
+        config:
+          platform: linux
+          outputs:
+            - name: github-repos
+          params:
+            GITHUB_TOKEN: ((github_token))
+            GITHUB_ORGS_JSON: ((github_orgs))
+            API_BASE: ((api_base))
+          run:
+            path: sh
+            args:
+              - -exc
+              - |
+                apk add --no-cache curl jq yq
+
+                API_BASE="${API_BASE:-https://api.github.com}"
+
+                # helper to page GitHub API and stream items
+                gh_list() {
+                  url="$1"
+                  page=1
+                  while : ; do
+                    data="$(curl -fsSL \
+                      -H "Authorization: Bearer $GITHUB_TOKEN" \
+                      -H "Accept: application/vnd.github+json" \
+                      "${url}?per_page=100&page=${page}")"
+                    [ -z "$data" ] && break
+                    echo "$data" | jq -c '.[]'
+                    [ "$(echo "$data" | jq 'length')" -lt 100 ] && break
+                    page=$((page+1))
+                  done
+                }
+
+                # helper to check if a file exists in a repo
+                file_exists() {
+                  owner="$1"
+                  repo="$2"
+                  filepath="$3"
+                  http_code=$(curl -o /dev/null -w "%{http_code}" -fsSL \
+                    -H "Authorization: Bearer $GITHUB_TOKEN" \
+                    -H "Accept: application/vnd.github+json" \
+                    "${API_BASE}/repos/${owner}/${repo}/contents/${filepath}")
+                  [ "$http_code" = "200" ]
+                }
+
+                # Build a YAML array of repos we want pipelines for
+                tmp_json="$(mktemp)"
+                : > "$tmp_json"
+
+                echo "$GITHUB_ORGS_JSON" | jq -r '.[]' | while read -r ORG; do
+                  gh_list "${API_BASE}/orgs/${ORG}/repos" | while read -r row; do
+                    archived=$(echo "$row" | jq -r '.archived')
+                    disabled=$(echo "$row" | jq -r '.disabled')
+                    if [ "$archived" = "true" ] || [ "$disabled" = "true" ]; then
+                      continue
+                    fi
+                    full_name=$(echo "$row" | jq -r '.full_name')
+                    clone_url=$(echo "$row" | jq -r '.clone_url')
+
+                    # Extract organization and repository names
+                    org_name=$(echo "$full_name" | cut -d'/' -f1)
+                    repo_name=$(echo "$full_name" | cut -d'/' -f2)
+
+                    # Check if repo has pom.xml or build.gradle in root
+                    echo "Checking $full_name for build files..."
+                    if file_exists "$org_name" "$repo_name" "pom.xml" || \
+                       file_exists "$org_name" "$repo_name" "build.gradle"; then
+                      echo "  ✓ Found build file in $full_name"
+                      safe_name=$(echo "$full_name" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+                      org_name_lower=$(echo "$org_name" | tr '[:upper:]' '[:lower:]')
+                      repo_name_lower=$(echo "$repo_name" | tr '[:upper:]' '[:lower:]')
+
+                      jq -n --arg full "$full_name" \
+                            --arg clone "$clone_url" \
+                            --arg safe "$safe_name" \
+                            --arg org "$org_name_lower" \
+                            --arg repo "$repo_name_lower" \
+                            '{full_name:$full, clone_url:$clone, safe_name:$safe, org_name:$org, repo_name:$repo}' >> "$tmp_json"
+                    else
+                      echo "  ✗ No build file found in $full_name, skipping"
+                    fi
+                  done
+                done
+
+                # Convert NDJSON to YAML list
+                if [ -s "$tmp_json" ]; then
+                  echo "[" > /tmp/list.json
+                  paste -sd, "$tmp_json" >> /tmp/list.json
+                  echo "]" >> /tmp/list.json
+                else
+                  echo "[]" > /tmp/list.json
+                fi
+
+                # github-repos/repos.yml will be a YAML array of objects:
+                # - full_name: org/repo
+                #   clone_url: https://github.com/org/repo.git
+                #   safe_name: org-repo
+                #   org_name: org
+                #   repo_name: repo
+                yq -P '.' /tmp/list.json > github-repos/repos.yml
+                echo "Wrote $(wc -l < github-repos/repos.yml) lines to github-repos/repos.yml"
+                echo "GitHub repositories:"
+                cat github-repos/repos.yml
+
+      - load_var: github_repos
+        file: github-repos/repos.yml
+
+      - across:
+          - var: repo
+            values: ((.:github_repos))
+        do:
+          - set_pipeline: ((.:repo.repo_name))
+            file: templates/pipelines/github-pipeline.yml
+            team: ((.:repo.org_name))
+            vars:
+              advisor_version: ((advisor_version))
+              docker-hub-password: ((docker-hub-password))
+              docker-hub-username: ((docker-hub-username))
+              repo_full_name: ((.:repo.full_name))
+              repo_clone_url: ((.:repo.clone_url))
+              github_token: ((github_token))
+              git_email: ((git_email))
+              git_name: ((git_name))
+              maven_password: ((maven_password))
+              maven_username: ((maven_username))
