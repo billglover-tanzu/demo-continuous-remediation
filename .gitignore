@@ -1,2 +1,6 @@
 .envrc
 tmp/
+
+# Ignore other repos
+acme-boot-starter
+advisor-mappings
