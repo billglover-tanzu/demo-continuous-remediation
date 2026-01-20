@@ -17,6 +17,8 @@ else
         "dashaun/xyz.gofastforever.account"
         "dashaun/logback-logstash-elastic-demo"
         "dashaun/spring-cloud-vault-demo"
+        "Broadcom/acme-bookings-app"
+        "Broadcom/acme-boot-starter"
     )
 fi
 
