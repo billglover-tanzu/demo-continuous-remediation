@@ -168,9 +168,6 @@ install_fly() {
     -v advisor_version="$ADVISOR_VERSION" \
     -v github_token="$GIT_TOKEN_FOR_PRS" \
     -v github_orgs="$GITHUB_ORGS" \
-    -v gitlab_token="${GITLAB_TOKEN:-}" \
-    -v gitlab_groups="${GITLAB_GROUPS:-[]}" \
-    -v gitlab_host="${GITLAB_HOST:-https://gitlab.com}" \
     -v git_email="$GIT_EMAIL" \
     -v git_name="$GIT_NAME" \
     -v api_base='https://api.github.com' \
