@@ -121,7 +121,7 @@ jobs:
             REPO_FULL_NAME: ((repo_full_name))
             MAVEN_PASSWORD: ((maven_password))
             MAVEN_USERNAME: ((maven_username))
-            SPRING_ADVISOR_MAPPING_CUSTOM_0_GIT_URI: https://github.com/dashaun-tanzu/advisor-mappings.git
+            SPRING_ADVISOR_MAPPING_CUSTOM_0_GIT_URI: https://github.com/billglover-tanzu/advisor-mappings.git
             SPRING_ADVISOR_MAPPING_CUSTOM_0_GIT_PATH: mappings/
           run:
             path: bash
