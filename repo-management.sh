@@ -14,13 +14,15 @@ if [ -n "$SOURCE_REPOS" ]; then
 else
     SOURCE_REPOS_ARRAY=(
         "dashaun/spring-petclinic"
-        "dashaun/xyz.gofastforever.account"
-        "dashaun/logback-logstash-elastic-demo"
-        "dashaun/spring-cloud-vault-demo"
         "billglover-tanzu/acme-bookings-app"
         "billglover-tanzu/acme-boot-starter"
     )
 fi
+
+## Other repos to include
+#        "dashaun/xyz.gofastforever.account"
+#        "dashaun/logback-logstash-elastic-demo"
+#        "dashaun/spring-cloud-vault-demo"
 
 echo "🚀 Starting GitHub repository management for org: $TARGET_ORG"
 
