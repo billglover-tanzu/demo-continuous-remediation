@@ -25,6 +25,14 @@ resources:
       username: x-access-token
       password: ((github_token))
 
+  - name: mappings 
+    type: git
+    source:
+      uri: https://github.com/billglover-demo/advisor-mappings
+      branch: main
+      username: x-access-token
+      password: ((github_token))
+
 jobs:
   - name: github-cr-cm
     max_in_flight: 1
