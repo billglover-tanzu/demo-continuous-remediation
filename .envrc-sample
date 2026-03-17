@@ -1,0 +1,27 @@
+# Credentials can be specified here or stored in 1Password
+
+## If you have multiple accounts SPRING_ENTERPRISE_TOKEN 1Password, you'll need to need
+## to specify which account to use.
+# export OP_ACCOUNT=
+
+export CONCOURSE_EXTERNAL_URL=http://localhost:8080
+export MAVEN_EXTERNAL_URL=http://localhost:8081
+
+export GITHUB_ORGS='["billglover-demo"]'
+export TARGET_ORG=billglover-demo
+
+## Spring Advisor
+export ADVISOR_VERSION=1.5.3
+export GIT_EMAIL=$(op read "op://Employee/GitHub Token for Advisor PRs/username")
+export GIT_TOKEN_FOR_PRS=$(op read "op://Employee/GitHub Token for Advisor PRs/password")
+
+## Spring Enterprise Credentials
+export SPRING_ENTERPRISE_USERNAME=$(op read "op://Employee/Spring Enterprise Token/username")
+#export SPRING_ENTERPRISE_TOKEN=$(op read "op://Employee/Spring Enterprise Token/password" | jq -r '.access_token')
+export SPRING_ENTERPRISE_TOKEN=$(op read "op://Employee/Spring Enterprise Token/password")
+export MAVEN_USERNAME=$SPRING_ENTERPRISE_USERNAME
+export MAVEN_PASSWORD=$SPRING_ENTERPRISE_TOKEN
+
+## Docker HUb Credentials
+export DOCKER_USER=$(op read "op://Employee/Docker Hub Token/username")
+export DOCKER_PASS=$(op read "op://Employee/Docker Hub Token/password")
